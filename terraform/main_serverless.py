@@ -20,8 +20,9 @@ class ServerlessStack(TerraformStack):
         account_id = DataAwsCallerIdentity(self, "acount_id").account_id
         
         bucket = S3Bucket(
-            self, "bucket",
-            bucket_prefix=""
+            self, "s3_bucket",
+            bucket_prefix="postagram-bucket",
+            force_destroy=True
         )
 
         # NE PAS TOUCHER !!!!
@@ -37,29 +38,34 @@ class ServerlessStack(TerraformStack):
 
         dynamo_table = DynamodbTable(
             self, "DynamodDB-table",
-            name= "",
-            hash_key="",
-            range_key="",
+            name= "postagram-posts",
+            hash_key="user",
+            range_key="post_id",
             attribute=[
-                DynamodbTableAttribute(name="",type="S" ),
-                DynamodbTableAttribute(name="",type="S" ),
+                DynamodbTableAttribute(name="user",type="S" ),
+                DynamodbTableAttribute(name="post_id",type="S" ),
             ],
             billing_mode="PROVISIONED",
             read_capacity=5,
             write_capacity=5
         )
 
-        code = TerraformAsset()
+        code = TerraformAsset(
+            self,
+            "lambda_asset",
+            path="lambda",
+            type=AssetType.ARCHIVE
+        )
 
         lambda_function = LambdaFunction(
             self, "lambda",
-            function_name="",
+            function_name="postagram_lambda_function",
             runtime="python3.10",
             memory_size=128,
             timeout=60,
             role=f"",
             filename= code.path,
-            handler="",
+            handler="lambda_function.lambda_handler",
             environment={"variables":{}}
         )
 

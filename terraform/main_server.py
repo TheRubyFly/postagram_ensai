@@ -15,10 +15,10 @@ from cdktf_cdktf_provider_aws.data_aws_caller_identity import DataAwsCallerIdent
 import base64
 
 # Mettez ici le nom du bucket S3 crée dans la partie serverless
-bucket=""
+bucket="postagram-bucket20250423092015891200000001"
 
 # Mettez ici le nom de la table dynamoDB créée dans la partie serverless
-dynamo_table=""
+dynamo_table="postagram-posts"
 
 # Mettez ici l'url de votre dépôt github. Votre dépôt doit être public !!!
 your_repo=""
