@@ -18,6 +18,7 @@ from pydantic import BaseModel
 import uvicorn
 
 from getSignedUrl import getSignedUrl
+from create_presign_url import create_presigned_url
 
 load_dotenv()
 
@@ -70,12 +71,32 @@ async def post_a_post(post: Post, authorization: str | None = Header(default=Non
     logger.info(f"body : {post.body}")
     logger.info(f"user : {authorization}")
 
+    post_id = str(uuid.uuid4())
+    image_link = create_presigned_url(bucket, f"{authorization}/{post_id}/image.png")
 
-    # Doit retourner le résultat de la requête la table dynamodb
-    return res
+    item = {
+        'user': f"USER#{authorization}",
+        'post_id': post_id,
+        'post_content': post.body,
+        'post_title': post.title,
+        'post_image': image_link,
+    }
+
+
+    logger.info(f"Inserting item in DynamoDB: {item}")
+
+    # Insert dans DynamoDB
+    table.put_item(Item=item)
+    
+    return {
+        'post_id': post_id,
+        'user': authorization,
+        'title': post.title,
+        'body': post.body
+    }
 
 @app.get("/posts")
-async def get_all_posts(user: Union[str, None] = None):
+async def get_posts(user: Union[str, None] = None):
     """
     Récupère tout les postes. 
     - Si un user est présent dans le requête, récupère uniquement les siens
@@ -83,25 +104,69 @@ async def get_all_posts(user: Union[str, None] = None):
     """
     if user :
         logger.info(f"Récupération des postes de : {user}")
+        res = table.query(
+            Select='ALL_ATTRIBUTES',
+            KeyConditionExpression="#usr = :user",
+            ExpressionAttributeNames={
+                "#usr": "user"
+            },
+            ExpressionAttributeValues={
+                ":user": user,
+            },
+        )
+
     else :
         logger.info("Récupération de tous les postes")
-     # Doit retourner une liste de posts
-    return res[""]
+        res = table.scan()
+
+    items = res.get("Items", [])
+    posts = []
+    for item in items:
+        post = {
+            "user": item.get("user", "").replace("USER#", ""),
+            "id": item.get("post_id"),
+            "title": item.get("post_title"),
+            "body": item.get("post_content"),
+            "image": item.get("post_image"),
+            "label": item.get("label", []),  # valeur par défaut vide
+        }
+        posts.append(post)
+
+    logger.info(f"Nombre de posts renvoyés : {len(posts)}")
+    return posts
 
     
 @app.delete("/posts/{post_id}")
 async def delete_post(post_id: str, authorization: str | None = Header(default=None)):
     # Doit retourner le résultat de la requête la table dynamodb
-    logger.info(f"post id : {post_id}")
+    logger.info(f"post_id : {id}")
     logger.info(f"user: {authorization}")
-    # Récupération des infos du poste
 
+    # Récupération des infos du poste
+    response = table.get_item(
+        Key={
+            'user': f"USER#{authorization}",
+            'post_id': post_id
+        }
+    )
+
+    item = response.get('Item', None)
+    if not item:
+        return JSONResponse(
+            status_code=404,
+            content={"message": "Post not found"}
+        )
     # S'il y a une image on la supprime de S3
 
     # Suppression de la ligne dans la base dynamodb
-
+    delete_response = table.delete_item(
+        Key={
+            'user': f"USER#{authorization}",
+            'post_id': post_id
+        }
+    )
     # Retourne le résultat de la requête de suppression
-    return item
+    return "Post deleted succesfully"
 
 
 
