@@ -55,7 +55,7 @@ function Post({ post, removePost, updatePost }) {
     }
 
     const deletePost = async () => {
-        const id = post.id.split("#")[1];
+        const id = post.id;
         console.log(`/posts/${post.id}`)
         axios.delete(`/posts/${id}`, { headers: { Authorization: getToken() } })
             .then(res => {

@@ -60,8 +60,6 @@ bucket = os.getenv("BUCKET")
 ####################################################################################################
 
 
-
-
 @app.post("/posts")
 async def post_a_post(post: Post, authorization: str | None = Header(default=None)):
     """
@@ -111,7 +109,7 @@ async def get_posts(user: Union[str, None] = None):
                 "#usr": "user"
             },
             ExpressionAttributeValues={
-                ":user": user,
+                ":user": f"USER#{user}",
             },
         )
 
@@ -137,9 +135,13 @@ async def get_posts(user: Union[str, None] = None):
 
     
 @app.delete("/posts/{post_id}")
-async def delete_post(post_id: str, authorization: str | None = Header(default=None)):
+async def delete_post(post_id: str, request: Request, authorization: str | None = Header(default=None)):
     # Doit retourner le résultat de la requête la table dynamodb
-    logger.info(f"post_id : {id}")
+    logger.info(f"RAW path params: {request.path_params}")
+    logger.info(f"Full URL: {request.url}")
+    logger.info(f"Method: {request.method}")
+    logger.info(f"Headers: {request.headers}")
+    logger.info(f"post_id : {post_id}")
     logger.info(f"user: {authorization}")
 
     # Récupération des infos du poste
@@ -185,3 +187,5 @@ if __name__ == "__main__":
 ## ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ☝️ ##
 ##                                                                                                ##
 ####################################################################################################
+
+

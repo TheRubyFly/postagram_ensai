@@ -21,7 +21,7 @@ bucket="postagram-bucket20250423092015891200000001"
 dynamo_table="postagram-posts"
 
 # Mettez ici l'url de votre dépôt github. Votre dépôt doit être public !!!
-your_repo=""
+your_repo="https://github.com/TheRubyFly/postagram_ensai"
 
 # Le user data pour lancer votre websservice. Il fonctionne tel quel
 user_data= base64.b64encode(f"""#!/bin/bash
