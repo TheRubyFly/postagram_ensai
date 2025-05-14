@@ -34,7 +34,7 @@ function Post({ post, removePost, updatePost }) {
         if (!attachment) {
             alert("Please select a file to upload.");
         }
-        const postId = post.id.split("#")[1];
+        const postId = post.id;
         const uploadUrl = await getSignedUrlPut(postId);
 
         const config = {

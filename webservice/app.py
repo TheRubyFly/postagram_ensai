@@ -18,7 +18,6 @@ from pydantic import BaseModel
 import uvicorn
 
 from getSignedUrl import getSignedUrl
-from create_presign_url import create_presigned_url
 
 load_dotenv()
 
@@ -70,7 +69,7 @@ async def post_a_post(post: Post, authorization: str | None = Header(default=Non
     logger.info(f"user : {authorization}")
 
     post_id = str(uuid.uuid4())
-    image_link = create_presigned_url(bucket, f"{authorization}/{post_id}/image.png")
+    image_link = getSignedUrl(bucket, f"{authorization}/{post_id}/image.png")
 
     item = {
         'user': f"USER#{authorization}",
