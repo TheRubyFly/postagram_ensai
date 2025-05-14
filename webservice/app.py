@@ -69,7 +69,7 @@ async def post_a_post(post: Post, authorization: str | None = Header(default=Non
     logger.info(f"user : {authorization}")
 
     post_id = str(uuid.uuid4())
-    image_link = getSignedUrl(bucket, f"{authorization}/{post_id}/image.png")
+    image_link = getSignedUrl("", "image", post_id, authorization)
 
     item = {
         'user': f"USER#{authorization}",
@@ -159,15 +159,30 @@ async def delete_post(post_id: str, request: Request, authorization: str | None 
         )
     # S'il y a une image on la supprime de S3
 
+    image_url = item.get("post_image", None)
+
+    if image_url:
+        try:
+            # Extraction du nom du fichier S3 depuis l'URL
+            logger.info(image_url)
+            file_key = image_url['objectName']
+
+            # Suppression du fichier de S3
+            s3_client.delete_object(Bucket=bucket, Key=file_key)
+            logger.info(f"Successfully deleted image from S3: {file_key}")
+        except Exception as e:
+            logger.error(f"Error deleting image from S3: {str(e)}")
+            return JSONResponse(
+                status_code=500,
+                content={"message": "Error deleting image from S3"}
+            )
     # Suppression de la ligne dans la base dynamodb
-    delete_response = table.delete_item(
+    return table.delete_item(
         Key={
             'user': f"USER#{authorization}",
             'post_id': post_id
         }
     )
-    # Retourne le résultat de la requête de suppression
-    return "Post deleted succesfully"
 
 
 
